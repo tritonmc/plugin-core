@@ -8,6 +8,7 @@ import com.rexcantor64.triton.config.interfaces.YamlConfiguration;
 import com.rexcantor64.triton.guiapi.GuiManager;
 import com.rexcantor64.triton.language.LanguageManager;
 import com.rexcantor64.triton.language.LanguageParser;
+import com.rexcantor64.triton.language.parser.LanguageParserManager;
 import com.rexcantor64.triton.logger.TritonLogger;
 import com.rexcantor64.triton.migration.LanguageMigration;
 import com.rexcantor64.triton.player.LanguagePlayer;
@@ -42,7 +43,9 @@ public abstract class Triton implements com.rexcantor64.triton.api.Triton {
     private MessagesConfig messagesConfig;
     // Managers
     private LanguageManager languageManager;
+    @Deprecated
     private LanguageParser languageParser;
+    private LanguageParserManager languageParserManager;
     private TwinManager twinManager;
     private PlayerManager playerManager;
     private Storage storage;
@@ -86,7 +89,9 @@ public abstract class Triton implements com.rexcantor64.triton.api.Triton {
 
         reload();
 
+        // Language Parser is Deprecated. Use Language Parser Manager instead.
         languageParser = new LanguageParser();
+        languageParserManager = new LanguageParserManager();
         twinManager = new TwinManager(this);
     }
 
