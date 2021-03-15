@@ -16,7 +16,7 @@ import com.rexcantor64.triton.api.wrappers.EntityType;
 import com.rexcantor64.triton.config.MainConfig;
 import com.rexcantor64.triton.language.item.LanguageSign;
 import com.rexcantor64.triton.language.item.SignLocation;
-import com.rexcantor64.triton.language.parser.AdvancedComponent;
+import com.rexcantor64.triton.language.parser.Md5AdvancedComponent;
 import com.rexcantor64.triton.player.LanguagePlayer;
 import com.rexcantor64.triton.player.SpigotLanguagePlayer;
 import com.rexcantor64.triton.storage.LocalStorage;
@@ -90,14 +90,17 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
             WrappedChatComponent msg = packet.getPacket().getChatComponents().readSafely(0);
             if (msg != null) {
                 try {
-                    BaseComponent[] result = main.getLanguageParser()
-                            .parseComponent(languagePlayer, main.getConf()
-                                    .getChatSyntax(), ComponentSerializer.parse(msg.getJson()));
-                    if (result == null) {
+                    val result = main.getLanguageParserManager().parseComponent(
+                            languagePlayer,
+                            main.getConf().getChatSyntax(),
+                            ComponentSerializer.parse(msg.getJson()));
+
+                    if (result.isDisabled()) {
                         packet.setCancelled(true);
                         return;
                     }
-                    msg.setJson(ComponentSerializer.toString(result));
+                    if (!result.isModified()) return;
+                    msg.setJson(ComponentSerializer.toString(result.getResult()));
                     packet.getPacket().getChatComponents().writeSafely(0, msg);
                 } catch (RuntimeException e) {
                     Triton.get().getLogger()
@@ -108,14 +111,15 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
                 }
                 return;
             }
-            BaseComponent[] bc = main.getLanguageParser().parseComponent(languagePlayer,
+            val result = main.getLanguageParserManager().parseComponent(languagePlayer,
                     main.getConf().getChatSyntax(),
                     baseComponentModifier.readSafely(0));
-            if (bc == null) {
+            if (result.isDisabled()) {
                 packet.setCancelled(true);
                 return;
             }
-            baseComponentModifier.writeSafely(0, bc);
+            if (!result.isModified()) return;
+            baseComponentModifier.writeSafely(0, result.getResult());
         }
     }
 
@@ -390,7 +394,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
             val defaultLines = new String[4];
             for (int i = 0; i < 4; i++) {
                 try {
-                    defaultLines[i] = AdvancedComponent
+                    defaultLines[i] = Md5AdvancedComponent
                             .fromBaseComponent(ComponentSerializer.parse(defaultLinesWrapped[i].getJson()))
                             .getTextClean();
                 } catch (Exception e) {
@@ -422,7 +426,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
                     try {
                         val nbtLine = nbt.getStringOrDefault("Text" + (i + 1));
                         if (nbtLine != null)
-                            defaultLines[i] = AdvancedComponent
+                            defaultLines[i] = Md5AdvancedComponent
                                     .fromBaseComponent(ComponentSerializer.parse(nbtLine))
                                     .getTextClean();
                     } catch (Exception e) {
@@ -454,7 +458,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
                         try {
                             val nbtLine = nbt.getStringOrDefault("Text" + (i + 1));
                             if (nbtLine != null)
-                                defaultLines[i] = AdvancedComponent
+                                defaultLines[i] = Md5AdvancedComponent
                                         .fromBaseComponent(ComponentSerializer.parse(nbtLine))
                                         .getTextClean();
                         } catch (Exception e) {
@@ -1120,7 +1124,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
     private BaseComponent[] mergeComponents(BaseComponent... comps) {
         if (main.getLanguageParser().hasTranslatableComponent(comps))
             return comps;
-        return new BaseComponent[]{new TextComponent(AdvancedComponent.fromBaseComponent(true, comps).getText())};
+        return new BaseComponent[]{new TextComponent(Md5AdvancedComponent.fromBaseComponent(true, comps).getText())};
     }
 
     private String translate(LanguagePlayer lp, String s, int max, MainConfig.FeatureSyntax syntax) {

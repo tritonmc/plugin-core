@@ -25,11 +25,11 @@ public class LanguageParserManager {
         }
     }
 
-    public <T> T parseComponent(LanguagePlayer p, FeatureSyntax syntax, T text) {
+    public <T> TranslationResult<T> parseComponent(LanguagePlayer p, FeatureSyntax syntax, T text) {
         return parseComponent(p.getLang().getName(), syntax, text);
     }
 
-    public <T> T parseComponent(String lang, FeatureSyntax syntax, T component) {
+    public <T> TranslationResult<T> parseComponent(String lang, FeatureSyntax syntax, T component) {
         if (parserMap.containsKey(component.getClass()))
             return parserMap.get(component.getClass()).parseComponent(lang, syntax, component);
 
