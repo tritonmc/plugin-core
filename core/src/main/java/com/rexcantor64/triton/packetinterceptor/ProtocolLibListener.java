@@ -2,10 +2,7 @@ package com.rexcantor64.triton.packetinterceptor;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.ListeningWhitelist;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.events.PacketListener;
+import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.injector.GamePhase;
 import com.comphenix.protocol.reflect.MethodUtils;
 import com.comphenix.protocol.wrappers.*;
@@ -141,7 +138,14 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
         BaseComponent[] resultHeader = main.getLanguageParser().parseComponent(languagePlayer,
                 main.getConf().getTabSyntax(), ComponentSerializer.parse(headerJson));
         if (resultHeader == null)
-            resultHeader = new BaseComponent[]{new TranslatableComponent("")};
+            resultHeader = new BaseComponent[]{new TextComponent("")};
+        else if (resultHeader.length == 1 && resultHeader[0] instanceof TextComponent) {
+            // This is needed because the Notchian client does not render the header/footer
+            // if the content of the header top level component is an empty string.
+            val textComp = (TextComponent) resultHeader[0];
+            if (textComp.getText().length() == 0 && !headerJson.equals("{\"text\":\"\"}"))
+                textComp.setText("§0§1§2§r");
+        }
         header.setJson(ComponentSerializer.toString(resultHeader));
         packet.getPacket().getChatComponents().writeSafely(0, header);
         WrappedChatComponent footer = packet.getPacket().getChatComponents().readSafely(1);
@@ -149,7 +153,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
         BaseComponent[] resultFooter = main.getLanguageParser().parseComponent(languagePlayer,
                 main.getConf().getTabSyntax(), ComponentSerializer.parse(footerJson));
         if (resultFooter == null)
-            resultFooter = new BaseComponent[]{new TranslatableComponent("")};
+            resultFooter = new BaseComponent[]{new TextComponent("")};
         footer.setJson(ComponentSerializer.toString(resultFooter));
         packet.getPacket().getChatComponents().writeSafely(1, footer);
         languagePlayer.setLastTabHeader(headerJson);
@@ -600,7 +604,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
                     .parseComponent(languagePlayer, main.getConf().getScoreboardSyntax(), ComponentSerializer
                             .parse(component.getJson()));
             if (result == null) result = new BaseComponent[]{new TextComponent("")};
-            component.setJson(ComponentSerializer.toString(mergeComponents(result)));
+            component.setJson(ComponentSerializer.toString(result));
             packet.getPacket().getChatComponents().writeSafely(i++, component);
         }
     }
@@ -624,7 +628,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
                 .parseComponent(languagePlayer, main.getConf().getScoreboardSyntax(), ComponentSerializer
                         .parse(displayName.getJson()));
         if (result == null) result = new BaseComponent[]{new TextComponent("")};
-        displayName.setJson(ComponentSerializer.toString(mergeComponents(result)));
+        displayName.setJson(ComponentSerializer.toString(result));
         packet.getPacket().getChatComponents().writeSafely(0, displayName);
     }
 
@@ -699,9 +703,9 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
             handleKickDisconnect(packet, languagePlayer);
         } else if (packet.getPacketType() == PacketType.Play.Server.OPEN_WINDOW_MERCHANT && main.getConf().isItems()) {
             handleMerchantItems(packet, languagePlayer);
-        } else if (packet.getPacketType() == PacketType.Play.Server.SCOREBOARD_TEAM) {
+        } else if (packet.getPacketType() == PacketType.Play.Server.SCOREBOARD_TEAM && main.getConf().isScoreboards()) {
             handleScoreboardTeam(packet, languagePlayer);
-        } else if (packet.getPacketType() == PacketType.Play.Server.SCOREBOARD_OBJECTIVE) {
+        } else if (packet.getPacketType() == PacketType.Play.Server.SCOREBOARD_OBJECTIVE && main.getConf().isScoreboards()) {
             handleScoreboardObjective(packet, languagePlayer);
         }
     }
@@ -1080,7 +1084,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
         types.add(PacketType.Status.Server.SERVER_INFO);
         if (getMCVersion() >= 9) types.add(PacketType.Play.Server.BOSS);
         if (getMCVersion() >= 14) types.add(PacketType.Play.Server.OPEN_WINDOW_MERCHANT);
-        return ListeningWhitelist.newBuilder().gamePhase(GamePhase.PLAYING).types(types).highest().build();
+        return ListeningWhitelist.newBuilder().gamePhase(GamePhase.PLAYING).types(types).mergeOptions(ListenerOptions.ASYNC).highest().build();
     }
 
     @Override
