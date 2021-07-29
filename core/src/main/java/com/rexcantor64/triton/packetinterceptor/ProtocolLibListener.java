@@ -170,7 +170,7 @@ public class ProtocolLibListener implements PacketListener, PacketInterceptor {
     private void handleActionbar(PacketEvent packet, SpigotLanguagePlayer languagePlayer) {
         if (!main.getConf().isActionbars()) return;
 
-        val baseComponentModifier = packet.getPacket().getSpecificModifier(BASE_COMPONENT_ARRAY_CLASS);
+        StructureModifier<BaseComponent[]> baseComponentModifier = packet.getPacket().getSpecificModifier(BASE_COMPONENT_ARRAY_CLASS);
         BaseComponent[] result = null;
 
         // Hot fix for Paper builds 472+

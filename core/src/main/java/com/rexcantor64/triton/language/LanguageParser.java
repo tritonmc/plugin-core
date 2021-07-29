@@ -1,5 +1,6 @@
 package com.rexcantor64.triton.language;
 
+import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.google.gson.JsonParseException;
 import com.rexcantor64.triton.SpigotMLP;
 import com.rexcantor64.triton.Triton;
@@ -10,6 +11,8 @@ import com.rexcantor64.triton.utils.ComponentUtils;
 import com.rexcantor64.triton.wrappers.legacy.HoverComponentWrapper;
 import lombok.val;
 import lombok.var;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.chat.ComponentSerializer;
@@ -272,7 +275,20 @@ public class LanguageParser implements com.rexcantor64.triton.api.language.Langu
                 if (Triton.get().getConfig().getLogLevel() >= 2)
                     e.printStackTrace();
             }
-        } else {
+        }
+        else if (translatedResult.startsWith("[minimsg]")) {
+            val mmInput = translatedResult.substring(9);
+            try {
+                componentResult = ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(MiniMessage.get().parse(mmInput)));
+            } catch (JsonParseException e) {
+                Triton.get().getLogger()
+                        .logError("Failed to parse Mini Message translation (%1): %2");
+                componentResult = componentResult = TextComponent.fromLegacyText(mmInput);
+                if (Triton.get().getConfig().getLogLevel() >= 2)
+                    e.printStackTrace();
+            }
+        }
+        else {
             componentResult = TextComponent.fromLegacyText(translatedResult);
         }
         return AdvancedComponent.fromBaseComponent(componentResult);
