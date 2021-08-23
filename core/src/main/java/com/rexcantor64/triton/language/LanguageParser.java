@@ -10,6 +10,8 @@ import com.rexcantor64.triton.utils.ComponentUtils;
 import com.rexcantor64.triton.wrappers.legacy.HoverComponentWrapper;
 import lombok.val;
 import lombok.var;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.chat.ComponentSerializer;
@@ -270,6 +272,17 @@ public class LanguageParser implements com.rexcantor64.triton.api.language.Langu
                         .logError("Failed to parse JSON translation (%1): %2", jsonInput, e.getMessage());
                 componentResult = TextComponent.fromLegacyText(jsonInput);
                 e.printStackTrace();
+            }
+        } else if (translatedResult.startsWith("[minimsg]")) {
+            val mmInput = translatedResult.substring(9);
+            try {
+                componentResult = ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(MiniMessage.get().parse(mmInput)));
+            } catch (JsonParseException e) {
+                Triton.get().getLogger()
+                        .logError("Failed to parse Mini Message translation (%1): %2");
+                componentResult = TextComponent.fromLegacyText(mmInput);
+                if (Triton.get().getConfig().getLogLevel() >= 2)
+                    e.printStackTrace();
             }
         } else {
             componentResult = TextComponent.fromLegacyText(translatedResult);
