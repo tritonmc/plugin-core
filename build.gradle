@@ -50,6 +50,10 @@ subprojects {
     dependencies {
         implementation 'com.github.tritonmc:Triton:v3.4.0' // Triton API
 
+        // Adventure / MiniMessage
+        implementation 'net.kyori:adventure-platform-bukkit:4.0.0-SNAPSHOT'
+        implementation 'net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT'
+
         compileOnly 'org.projectlombok:lombok:1.18.12'
         annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
@@ -130,6 +134,7 @@ shadowJar {
     getArchiveBaseName().set(rootProject.name)
     relocate 'org.bstats', 'com.rexcantor64.triton.metrics'
     //relocate 'org.slf4j', 'com.rexcantor64.shaded.slf4j'
+    relocate "net.kyori.adventure.text.minimessage", "com.rexcantor64.triton.minimessage"
     relocate 'com.tananaev.jsonpatch', 'com.rexcantor64.shaded.jsonpatch'
     relocate 'com.zaxxer.hikari', 'com.rexcantor64.shaded.hikari'
 }
