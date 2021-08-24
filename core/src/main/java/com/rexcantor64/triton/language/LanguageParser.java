@@ -269,20 +269,21 @@ public class LanguageParser implements com.rexcantor64.triton.api.language.Langu
                 componentResult = ComponentSerializer.parse(jsonInput);
             } catch (JsonParseException e) {
                 Triton.get().getLogger()
-                        .logError("Failed to parse JSON translation (%1): %2", jsonInput, e.getMessage());
+                        .logError("Failed to parse JSON translation: %1", jsonInput);
                 componentResult = TextComponent.fromLegacyText(jsonInput);
                 e.printStackTrace();
             }
         } else if (translatedResult.startsWith("[minimsg]")) {
             val mmInput = translatedResult.substring(9);
             try {
-                componentResult = ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(MiniMessage.get().parse(mmInput)));
-            } catch (JsonParseException e) {
+                val textComponent = MiniMessage.get().parse(mmInput);
+                val jsonSerialized = GsonComponentSerializer.gson().serialize(textComponent);
+                componentResult = ComponentSerializer.parse(jsonSerialized);
+            } catch (JsonParseException | NullPointerException e) {
                 Triton.get().getLogger()
-                        .logError("Failed to parse Mini Message translation (%1): %2");
+                        .logError("Failed to parse Mini Message translation: %1", mmInput);
                 componentResult = TextComponent.fromLegacyText(mmInput);
-                if (Triton.get().getConfig().getLogLevel() >= 2)
-                    e.printStackTrace();
+                e.printStackTrace();
             }
         } else {
             componentResult = TextComponent.fromLegacyText(translatedResult);
